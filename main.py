@@ -1,7 +1,9 @@
 from bs4 import BeautifulSoup
 import requests
+import json
 
 from scrappertools.price import *
+from scrappertools.productos import Product
 from scrappertools.categorias import MTB, ROAD_BIKES, CHAINS, CITY_BIKES
 
 categoria = "Chains"
@@ -20,7 +22,7 @@ def discover_category_urls(category):
 		["bicicletas/monta-a", MTB],
 		["bicicletas/urbana", CITY_BIKES],
 		["bicicletas/ruta", ROAD_BIKES],
-		["componentes/transmision/cadenas", CHAINS]
+		["162/ciclismo/componentes-de-bicicleta?initialMap=productClusterIds&initialQuery=162&map=productClusterIds", CHAINS]
 	]
 	
 	product_urls = []
@@ -28,69 +30,43 @@ def discover_category_urls(category):
 	for category_path, local_category in url_extensions:
 		if local_category != category:
 			continue
-	
-		done = False
+
 		page = 1
 		contador = 0
+		done = False
 		
-		while not done:
-			category_url = "https://www.oxfordstore.cl/{}.html?p={}" \
-		                    .format(category_path, page)
-			print(category_url)
-			data = requests.get(category_url).text
-			soup = BeautifulSoup(data, 'html.parser')
-			product_containers = soup.findAll("li", "item product product-item")
-			
-			if not product_containers:
+		while True:
+			old_page = page
+			category_url = "https://www.montenbaik.com/{}&page={}" \
+			.format(category_path, page)
+			#print(category_url)
+			retries = 3
+			while retries:
+				data = requests.get(category_url).text
+				soup = BeautifulSoup(data, 'html.parser')
+				json_data = json.loads(soup.findAll(
+					"script", {"type" : "application/ld+json"})[1].text)
+				if not json_data:
+					retries -= 1
+				else:
+					retries = 0
+				print("retries: ", retries, "page: ", page)
+
+			item_list = json_data["itemListElement"]
+
+			if len(item_list) == 0:
 				if page == 1:
-					raise Exception('Empty category: ' + category_path)
-					break
-				if page != 1:
-					done = True
-					break
-			
-			for container in product_containers:
-				product_url = container.find('a')['href']
-				print("product: ", product_url)
-				product_urls.append(product_url)
-				contador += 1
-				
-			print("Contador: ", contador, "Page: ", page, "Done: ", done)
+					print("empty category")
+				break
+			else:
+				for i in item_list:
+					if "item" in i:
+						contador +=1
+						print(contador)
+						print(i["item"]["@id"])
+						product_urls.append(i["item"]["@id"])
 			page += 1
-			
-	return(product_urls)
 
-#discover_category_urls(categoria)
-
-#products:
-def product_info(url):
-		response = requests.get(url).text
-
-		soup = BeautifulSoup(response, 'html.parser')
-		name = soup.find("h1", "page-title").text.strip()
-		print(name)
-
-		sku = soup.find("div", "value").text.strip()
-		print(sku)
-	
-		stock = soup.find("div", "availability in-stock")
-		if stock.find("en tienda web") == -1:
-				stock = "No Disponible"
-		else:
-				stock = "Disponible"
-		print(stock)
-	
-		price = soup.find("span", "price").text.strip()
-		price = price_cleaner(price)
-		print(price)
-
-    #descripcion
-
-		picture_urls = [tag['src'] for tag in
-										soup.findAll('img', 'gallery-placeholder__image')]
-    #picture_urls = soup.find('img', 'gallery-placeholder__image')
-		print(picture_urls)
-
-		return("Producto terminado")
-
-#product_info("https://www.oxfordstore.cl/cadena-kmc-z6-6-speed-grey-grey-116l.html")
+		return("pepo")
+					
+discover_category_urls(categoria)
