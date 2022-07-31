@@ -1,9 +1,8 @@
 from bs4 import BeautifulSoup
 import requests
-from categorias import MTB, ROAD_BIKES, CHAINS, CITY_BIKES
 
-blacklist = ['CLP$', 'CLP', 'precio', 'internet', 'normal',
-                 '$', '.', ',', '&nbsp;', '\r', '\n', '\t', '\xa0']
+from scrappertools.price import *
+from scrappertools.categorias import MTB, ROAD_BIKES, CHAINS, CITY_BIKES
 
 categoria = "Chains"
 
@@ -61,36 +60,37 @@ def discover_category_urls(category):
 			
 	return(product_urls)
 
-discover_category_urls(categoria)
+#discover_category_urls(categoria)
 
 #products:
 def product_info(url):
-    response = requests.get(url).text
+		response = requests.get(url).text
 
-    soup = BeautifulSoup(response, 'html.parser')
-    name = soup.find("h1", "page-title").text.strip()
-    print(name)
+		soup = BeautifulSoup(response, 'html.parser')
+		name = soup.find("h1", "page-title").text.strip()
+		print(name)
 
-    sku = soup.find("div", "value").text.strip()
-    print(sku)
-
-    stock = soup.find("div", "availability in-stock")
-    if stock.find("en tienda web") == -1:
-        stock = "No Disponible"
-    else:
-        stock = "Disponible"
-    print(stock)
-
-    price = soup.find("span", "price").text.strip()
-    for word in blacklist:
-    	price = price.replace(word, '')
-    print(price)
+		sku = soup.find("div", "value").text.strip()
+		print(sku)
+	
+		stock = soup.find("div", "availability in-stock")
+		if stock.find("en tienda web") == -1:
+				stock = "No Disponible"
+		else:
+				stock = "Disponible"
+		print(stock)
+	
+		price = soup.find("span", "price").text.strip()
+		price = price_cleaner(price)
+		print(price)
 
     #descripcion
 
-    picture_urls = [tag['src'] for tag in
+		picture_urls = [tag['src'] for tag in
 										soup.findAll('img', 'gallery-placeholder__image')]
     #picture_urls = soup.find('img', 'gallery-placeholder__image')
-    print(picture_urls)
+		print(picture_urls)
 
-    return("Producto terminado")
+		return("Producto terminado")
+
+#product_info("https://www.oxfordstore.cl/cadena-kmc-z6-6-speed-grey-grey-116l.html")
