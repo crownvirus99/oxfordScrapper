@@ -1,45 +1,67 @@
 from bs4 import BeautifulSoup
 import requests
+from categorias import MTB, ROAD_BIKES, CHAINS, CITY_BIKES
 
 blacklist = ['CLP$', 'CLP', 'precio', 'internet', 'normal',
                  '$', '.', ',', '&nbsp;', '\r', '\n', '\t', '\xa0']
 
-categoria = "cadenas"
+categoria = "Chains"
+
+def categories(cls):
+	return [
+		MTB,
+		ROAD_BIKES,
+		CHAINS,
+		CITY_BIKES
+	]
+	
 #discover urls
-url_extensions = [
+def discover_category_urls(category):
+	url_extensions = [
+		["bicicletas/monta-a", MTB],
+		["bicicletas/urbana", CITY_BIKES],
+		["bicicletas/ruta", ROAD_BIKES],
+		["componentes/transmision/cadenas", CHAINS]
+	]
 	
-]
+	product_urls = []
 
-product_urls = []
-
-done = False
-page = 1
-contador = 0
-
-while not done:
-	category_url = "https://www.oxfordstore.cl/{}.html?p={}" \
-                    .format(category_path, page)
-	#print(category_url)
-	data = requests.get(category_url).text
-	soup = BeautifulSoup(data, 'html.parser')
-	product_containers = soup.findAll("li", "item product product-item")
+	for category_path, local_category in url_extensions:
+		if local_category != category:
+			continue
 	
-	if not product_containers:
-		if page == 1:
-			raise Exception('Empty category: ' + category_path)
-			break
-		if page != 1:
-			done = True
-			break
+		done = False
+		page = 1
+		contador = 0
+		
+		while not done:
+			category_url = "https://www.oxfordstore.cl/{}.html?p={}" \
+		                    .format(category_path, page)
+			print(category_url)
+			data = requests.get(category_url).text
+			soup = BeautifulSoup(data, 'html.parser')
+			product_containers = soup.findAll("li", "item product product-item")
 			
-	for container in product_containers:
-		product_url = container.find('a')['href']
-		print("product: ", product_url)
-		product_urls.append(product_url)
-		contador += 1
+			if not product_containers:
+				if page == 1:
+					raise Exception('Empty category: ' + category_path)
+					break
+				if page != 1:
+					done = True
+					break
+			
+			for container in product_containers:
+				product_url = container.find('a')['href']
+				print("product: ", product_url)
+				product_urls.append(product_url)
+				contador += 1
+				
+			print("Contador: ", contador, "Page: ", page, "Done: ", done)
+			page += 1
+			
+	return(product_urls)
 
-	page += 1
-	print("Contador: ", contador, "Page: ", page, "Done: ", done)
+discover_category_urls(categoria)
 
 #products:
 def product_info(url):
