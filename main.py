@@ -2,7 +2,6 @@ from bs4 import BeautifulSoup
 import requests
 import json
 
-from scrappertools.price import *
 from scrappertools.productos import Product
 from scrappertools.categorias import MTB, ROAD_BIKES, CHAINS, CITY_BIKES
 
@@ -69,4 +68,63 @@ def discover_category_urls(category):
 
 		return("pepo")
 					
-discover_category_urls(categoria)
+#discover_category_urls(categoria)
+
+def product_info(cls, url, category=None):
+	print (url)
+	response = requests.get(url).text
+	soup = BeautifulSoup(response, 'html.parser')
+	
+	json_tags = soup.findAll("script", {'type': 'application/ld+json'})
+
+	if not json_tags:
+		return[]
+
+	json_data = json.loads(json_tags[0].text)
+	#name
+	name = json_data["name"]
+	#name = soup.find("h1", "page-title").text.strip()
+	print(name)
+	
+	#sku
+	sku = str(json_data["sku"])
+	#sku = soup.find("div", "value").text.strip()
+	print(sku)
+
+	#stock
+	stock = json_data['offers']['offers'][0]['availability']
+	if stock == "http://schema.org/InStock":
+			stock = -1
+	else:
+			stock = 0
+	print(stock)
+
+	#price
+	price = json_data['offers']['offers'][0]['price']
+	#price = soup.find("span", "price").text.strip()
+	#price = price_cleaner(price)
+	print(price)
+
+	#descripcion
+	description = json_data['description']
+	print(description)
+
+	#pictures
+	picture_urls = json_data['image']
+	print(picture_urls)
+
+	p = Product(
+		category,
+		cls,
+		url,
+		name,
+		stock,
+		price,
+		sku,
+	)
+
+	p.print_products()
+	
+	return [p]
+
+#cadena = product_info("montenbaik", "https://www.montenbaik.com/cadena-cn12a-12v-126-eslabones-sunrace/p", "chains")
