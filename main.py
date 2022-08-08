@@ -18,9 +18,9 @@ def categories(cls):
 #discover urls
 def discover_category_urls(category):
 	url_extensions = [
-		["bicicletas/monta-a", MTB],
-		["bicicletas/urbana", CITY_BIKES],
-		["bicicletas/ruta", ROAD_BIKES],
+		["143/ciclismo/bicicletas-y-cuadros?initialMap=productClusterIds&initialQuery=143&map=productClusterIds", MTB],
+		["152/ciclismo/bicicletas-y-cuadros?initialMap=productClusterIds&initialQuery=152&map=productClusterIds", CITY_BIKES],
+		["146/ciclismo/bicicletas-y-cuadros?initialMap=productClusterIds&initialQuery=146&map=productClusterIds", ROAD_BIKES],
 		["162/ciclismo/componentes-de-bicicleta?initialMap=productClusterIds&initialQuery=162&map=productClusterIds", CHAINS]
 	]
 	
@@ -32,10 +32,8 @@ def discover_category_urls(category):
 
 		page = 1
 		contador = 0
-		done = False
 		
 		while True:
-			old_page = page
 			category_url = "https://www.montenbaik.com/{}&page={}" \
 			.format(category_path, page)
 			#print(category_url)
@@ -81,14 +79,13 @@ def product_info(cls, url, category=None):
 		return[]
 
 	json_data = json.loads(json_tags[0].text)
+	
 	#name
 	name = json_data["name"]
-	#name = soup.find("h1", "page-title").text.strip()
 	print(name)
 	
 	#sku
 	sku = str(json_data["sku"])
-	#sku = soup.find("div", "value").text.strip()
 	print(sku)
 
 	#stock
@@ -101,8 +98,6 @@ def product_info(cls, url, category=None):
 
 	#price
 	price = json_data['offers']['offers'][0]['price']
-	#price = soup.find("span", "price").text.strip()
-	#price = price_cleaner(price)
 	print(price)
 
 	#descripcion

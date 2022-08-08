@@ -21,5 +21,6 @@ class Product:
 		self.price = price
 		self.picture_urls = picture_urls
 
+	#debug:
 	def print_products(self):
 		print("Producto: ", self.name, self.category, self.store, self.url, self.name, self.sku, self.stock, self.price, self.picture_urls)
